@@ -16,6 +16,7 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
     const [markers, setMarkers] = useState<number[]>([]);
     const [width, height] = videoSize.split('x').map(Number);
+    const [totalDurationSecs, setTotalDurationSecs] = useState(0);
 
     const parseHTML = useCallback((context: CanvasRenderingContext2D, html: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
         const tempDiv = document.createElement('div');
@@ -162,6 +163,17 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
         }
     }, []);
 
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const getCurrentTime = () => {
+        const frameRate = 30; // FPS
+        return formatTime(currentIndex / frameRate);
+    };
+
     useEffect(() => {
         if (!canvasRef.current || lines.length === 0) return;
 
@@ -205,6 +217,7 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
         setFrames(newFrames);
         setMarkers(newMarkers);
         setCurrentIndex(0);
+        setTotalDurationSecs(totalDuration);
     }, [lines, width, height, parseHTML]);
 
     useEffect(() => {
@@ -258,14 +271,26 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
                 height={height}
                 style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '80vh', aspectRatio: `${width} / ${height}` }}
             />
-            <div className="controls">
-                <div className="seek-bar-container">
+            <div className="controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                <div className="time-display" style={{ 
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem',
+                    color: '#fff',
+                    padding: '0.25rem 0.5rem',
+                    background: '#000',
+                    borderRadius: '4px',
+                    minWidth: '7ch',
+                    whiteSpace: 'nowrap'
+                }}>
+                    {`${getCurrentTime()} / ${formatTime(totalDurationSecs)}`}
+                </div>
+                <div className="seek-bar-container" style={{ flex: 1, position: 'relative' }}>
                     <div className="seek-bar-markers">
-                        {markers.slice(0, -1).map((marker) => (
+                        {markers.length > 1 && markers.slice(0, -1).map((marker) => (
                             <div
                                 key={marker}
                                 className="seek-bar-marker"
-                                style={{ left: `${(marker / markers[markers.length - 1]) * 100}%` }}
+                                style={{ left: `${(marker / totalDurationSecs) * 100}%` }}
                             />
                         ))}
                     </div>
@@ -276,9 +301,10 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
                         value={currentIndex}
                         onChange={handleSeek}
                         className="seek-bar"
+                        style={{ width: '100%' }}
                     />
                 </div>
-                <button type="button" onClick={handlePlayPause} className="control-button ml-6">
+                <button type="button" onClick={handlePlayPause} className="control-button">
                     {isPlaying ? <FaPause /> : <FaPlay />}
                 </button>
             </div>
