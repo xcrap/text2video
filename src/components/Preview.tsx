@@ -52,6 +52,17 @@ const TEXT_SIZE_MULTIPLIERS = {
 	xl: 2, // 200% of base size
 } as const;
 
+// Move this outside of the component
+const getCacheKey = (
+	text: string,
+	options: { duration: number; color: string; textSize: string },
+	width: number,
+	height: number,
+	selectedFont: string,
+	fontClass: string,
+) =>
+	`${text}-${JSON.stringify(options)}-${width}-${height}-${selectedFont}-${fontClass}`;
+
 const Preview = forwardRef<PreviewRef, PreviewProps>(
 	({ lines, videoSize, currentEditingLine, selectedFont, fontClass }, ref) => {
 		const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -482,8 +493,16 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 				context: CanvasRenderingContext2D,
 				width: number,
 				height: number,
+				currentFontClass: string, // Add parameter
 			) => {
-				const cacheKey = `${text}-${JSON.stringify(options)}-${width}-${height}-${selectedFont}`;
+				const cacheKey = getCacheKey(
+					text,
+					options,
+					width,
+					height,
+					selectedFont,
+					currentFontClass,
+				);
 
 				if (frameCache.current.has(cacheKey)) {
 					const cachedFrame = frameCache.current.get(cacheKey);
@@ -525,7 +544,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 
 				return frame;
 			},
-			[BASE_FONT_SIZE, selectedFont, parseHTML],
+			[BASE_FONT_SIZE, selectedFont, parseHTML], // Remove fontClass from here
 		);
 
 		// Update frame generation effect to use cache
@@ -540,6 +559,8 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 			const newMarkers: number[] = [];
 			const newLineStartFrames: number[] = [];
 			let totalDuration = 0;
+
+			const currentFontClass = fontClass; // Capture current value
 
 			requestAnimationFrame(() => {
 				for (const line of lines) {
@@ -560,7 +581,14 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 						textSize: textSizeMatch ? textSizeMatch[1] : "base",
 					};
 
-					const frame = generateFrame(text, options, context, width, height);
+					const frame = generateFrame(
+						text,
+						options,
+						context,
+						width,
+						height,
+						currentFontClass,
+					);
 					const frameCount = options.duration * 30;
 
 					for (let i = 0; i < frameCount; i++) {
@@ -576,7 +604,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 				setLineStartFrames(newLineStartFrames);
 				setTotalDurationSecs(totalDuration);
 			});
-		}, [lines, width, height, generateFrame, isFontLoaded]);
+		}, [lines, width, height, generateFrame, isFontLoaded, fontClass]);
 
 		// Clear cache when font changes
 		useEffect(() => {
