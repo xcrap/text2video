@@ -75,3 +75,7 @@ body {
   background-color: rgba(255, 255, 255, 0.8);
   transform: translateX(-50%);
 }
+
+.preview canvas {
+  @apply border border-neutral-600 rounded;
+}

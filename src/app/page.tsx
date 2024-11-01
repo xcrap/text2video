@@ -59,33 +59,34 @@ export default function Home() {
           onClick={handleClick}
           onKeyUp={handleKeyUp}
           placeholder="Enter text here..."
-          className="w-full min-h-64 p-2 border rounded bg-black text-white focus:outline-none"
+          className="w-full min-h-72 p-2 border border-neutral-600 rounded bg-neutral-900 text-white focus:outline-none"
         />
-        <div className="mt-4 flex items-center">
+      </div>
+      <div className="w-1/2 pl-2">
+      <div className="mb-4 flex items-center">
           <label htmlFor="videoSize" className="mr-2">Video Size:</label>
           <Select value={videoSize} onValueChange={handleVideoSizeChange}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-[240px] rounded border-white/10">
               <SelectValue placeholder="Select video size" />
             </SelectTrigger>
-            <SelectContent className="bg-black">
+            <SelectContent className="bg-black ">
               <SelectItem value="1024x1024">1:1 (1024x1024)</SelectItem>
               <SelectItem value="1080x1920">Instagram Story Vertical (1080x1920)</SelectItem>
               <SelectItem value="1920x1080">Landscape (1920x1080)</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <Button 
-          onClick={handleGenerate}
-          className="mt-4">
-          Generate Video
-        </Button>
-      </div>
-      <div className="w-1/2 pl-2">
-        <Preview 
+        <Preview  
           lines={lines} 
           videoSize={videoSize} 
           currentEditingLine={currentEditingLine} 
         />
+        <Button 
+          variant="outline" 
+          onClick={handleGenerate}
+          className="mt-4 rounded hover:bg-black border-white/10 uppercase font-bold">
+          Generate Video
+        </Button>
       </div>
     </div>
   );
