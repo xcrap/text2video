@@ -147,14 +147,18 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                 }
             }
 
-            if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-                // Only create segment if text content has non-whitespace characters
-                const trimmedText = node.textContent.trim();
-                if (trimmedText) {
-                    segments.push({ 
-                        text: trimmedText,
-                        styles: currentStyles
-                    });
+            if (node.nodeType === Node.TEXT_NODE) {
+                // Split the text to preserve spaces
+                const parts = node.textContent?.split(/(\s+)/);
+                if (parts) {
+                    for (const part of parts) {
+                        if (part.length > 0) {
+                            segments.push({ 
+                                text: part,
+                                styles: currentStyles
+                            });
+                        }
+                    }
                 }
             }
 
@@ -204,28 +208,16 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                 continue;
             }
 
-            const words = segment.text.split(/\s+/);
-            let isFirstWord = true;
-
-            for (const word of words) {
-                if (!word) continue;
-
-                const wordWidth = measureText(word, segment.styles);
-                
-                if (currentLineWidth + wordWidth > maxWidth && currentLine.length > 0) {
-                    drawCurrentLine();
-                    currentY += lineHeight; // Add line height only for word wrapping
-                }
-
-                if (currentLine.length > 0 && !isFirstWord) {
-                    currentLine.push({ text: ' ', styles: segment.styles });
-                    currentLineWidth += measureText(' ', segment.styles);
-                }
-
-                currentLine.push({ text: word, styles: segment.styles });
-                currentLineWidth += wordWidth;
-                isFirstWord = false;
+            // Handle the segment as a whole, including spaces
+            const segmentWidth = measureText(segment.text, segment.styles);
+            
+            if (currentLineWidth + segmentWidth > maxWidth && currentLine.length > 0) {
+                drawCurrentLine();
+                currentY += lineHeight; // Add line height only for word wrapping
             }
+
+            currentLine.push(segment);
+            currentLineWidth += segmentWidth;
         }
 
         // Draw any remaining text
