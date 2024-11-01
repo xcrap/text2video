@@ -15,8 +15,8 @@ interface PreviewProps {
 // Move font calculations outside component
 const calculateFontSize = (width: number, height: number) => Math.min(width, height) * 0.05;
 
-const createFontStyle = (fontSize: number, fontName: string, weight = '400', style = 'normal') => 
-  `${weight} ${style} ${fontSize}px "${fontName}"`;
+const createFontStyle = (fontSize: number, fontName: string, weight = '400', style = 'normal') =>
+    `${weight} ${style} ${fontSize}px "${fontName}"`;
 
 // First, create a helper function outside the component
 const createFontStyles = (fontSize: number, fontName: string) => ({
@@ -63,7 +63,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
             await document.fonts.ready;
             setIsFontLoaded(true);
         };
-        
+
         checkFont();
     }, []);
 
@@ -93,10 +93,10 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
             // Use cached font styles instead of building string each time
             if (!fontStyleRef.current) return;
             const fontStyle = styles.bold && styles.italic ? fontStyleRef.current.boldItalic :
-                            styles.bold ? fontStyleRef.current.bold :
-                            styles.italic ? fontStyleRef.current.italic :
-                            fontStyleRef.current.normal;
-            
+                styles.bold ? fontStyleRef.current.bold :
+                    styles.italic ? fontStyleRef.current.italic :
+                        fontStyleRef.current.normal;
+
             context.font = fontStyle;
             context.fillStyle = color;
             context.textAlign = 'center';
@@ -115,8 +115,8 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
             if (styles.underline) {
                 const textWidth = context.measureText(text).width;
                 context.beginPath();
-                context.moveTo(xPos - textWidth/2, yPos + 2);
-                context.lineTo(xPos + textWidth/2, yPos + 2);
+                context.moveTo(xPos - textWidth / 2, yPos + 2);
+                context.lineTo(xPos + textWidth / 2, yPos + 2);
                 context.stroke();
             }
         };
@@ -126,7 +126,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
 
             if (node.nodeType === Node.ELEMENT_NODE) {
                 const element = node as HTMLElement;
-                
+
                 switch (element.tagName) {
                     case 'B':
                         currentStyles.bold = true;
@@ -138,10 +138,10 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                         currentStyles.underline = true;
                         break;
                     case 'BR':
-                        segments.push({ 
-                            text: '', 
-                            styles: currentStyles, 
-                            isBreak: true 
+                        segments.push({
+                            text: '',
+                            styles: currentStyles,
+                            isBreak: true
                         });
                         return;
                 }
@@ -153,7 +153,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                 if (parts) {
                     for (const part of parts) {
                         if (part.length > 0) {
-                            segments.push({ 
+                            segments.push({
                                 text: part,
                                 styles: currentStyles
                             });
@@ -210,7 +210,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
 
             // Handle the segment as a whole, including spaces
             const segmentWidth = measureText(segment.text, segment.styles);
-            
+
             if (currentLineWidth + segmentWidth > maxWidth && currentLine.length > 0) {
                 drawCurrentLine();
                 currentY += lineHeight; // Add line height only for word wrapping
@@ -256,19 +256,19 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
         for (const line of lines) {
             const startFrame = newFrames.length;
             newLineStartFrames.push(startFrame);
-            
+
             const [text, ...optionsArr] = line.split('--');
             const optionsStr = optionsArr.join('--');
-            
+
             // Parse all options
             const durationMatch = optionsStr.match(/duration\s+(\d+)/);
             const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
             const textSizeMatch = optionsStr.match(/text(xs|sm|lg|xl)\b/);
-            
+
             // Get values from matches
             const duration = durationMatch ? Number.parseInt(durationMatch[1], 10) : 3;
             const color = colorMatch ? colorMatch[1] : '#fff';
-            const textSizeMultiplier = textSizeMatch 
+            const textSizeMultiplier = textSizeMatch
                 ? TEXT_SIZE_MULTIPLIERS[textSizeMatch[1] as keyof typeof TEXT_SIZE_MULTIPLIERS]
                 : TEXT_SIZE_MULTIPLIERS.base;
 
@@ -303,48 +303,60 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
         setCurrentIndex(0); // Always start from beginning when frames change
     }, [lines, width, height, parseHTML, isFontLoaded, BASE_FONT_SIZE, selectedFont]);
 
-    // Combine index management into a single effect
+    // Add this ref to track previous editing line
+    const prevEditingLineRef = useRef<number | null>(null);
+
+    // Add this memoized callback before the playback effect
+    const advanceFrame = useCallback(() => {
+        setCurrentIndex(prev => {
+            const next = prev + 1;
+            return next >= frames.length ? prev : next;
+        });
+    }, [frames.length]);
+
+    // Move isPlaying into ref to avoid dependency cycle
+    const isPlayingRef = useRef(false);
+
+    // Add effect to sync isPlaying state with ref
     useEffect(() => {
-        // Skip if we don't have necessary data
-        if (!frames.length || !lineStartFrames.length) return;
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
 
-        // Handle editing line changes
-        if (currentEditingLine !== null) {
-            const targetFrame = lineStartFrames[currentEditingLine];
-            if (targetFrame !== undefined && !isPlaying) {
-                requestAnimationFrame(() => {
-                    setCurrentIndex(targetFrame);
-                });
+    // Update the playback effect
+    useEffect(() => {
+        if (!frames.length || !isPlaying) return;
+
+        const id = setInterval(() => {
+            const nextIndex = currentIndex + 1;
+            if (nextIndex >= frames.length) {
+                setIsPlaying(false);
+                return;
             }
-            return;
+            advanceFrame();
+        }, 1000 / 30);
+
+        intervalIdRef.current = id;
+        return () => {
+            if (intervalIdRef.current) {
+                clearInterval(intervalIdRef.current);
+                intervalIdRef.current = null;
+            }
+        };
+    }, [frames.length, advanceFrame, currentIndex, isPlaying]);
+
+    // Update editing line effect to use ref
+    useEffect(() => {
+        if (currentEditingLine !== null && !isPlayingRef.current && lineStartFrames.length > 0) {
+            const targetFrame = lineStartFrames[currentEditingLine];
+            if (targetFrame !== undefined) {
+                setCurrentIndex(targetFrame);
+            }
         }
+    }, [currentEditingLine, lineStartFrames]);
 
-        // Handle playback
-        if (isPlaying) {
-            const id = setInterval(() => {
-                setCurrentIndex(prevIndex => {
-                    const nextIndex = prevIndex + 1;
-                    if (nextIndex >= frames.length) {
-                        setIsPlaying(false);
-                        return prevIndex;
-                    }
-                    return nextIndex;
-                });
-            }, 1000 / 30);
-            intervalIdRef.current = id;
-
-            return () => {
-                if (intervalIdRef.current) {
-                    clearInterval(intervalIdRef.current);
-                    intervalIdRef.current = null;
-                }
-            };
-        }
-    }, [currentEditingLine, lineStartFrames, isPlaying, frames.length]);
-
+    // Keep the frame rendering effect
     useEffect(() => {
         if (!canvasRef.current || frames.length === 0) return;
-
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
         if (!context) return;
@@ -356,13 +368,16 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
         };
     }, [currentIndex, frames, width, height]);
 
+    // Keep handlePlayPause simple, just use state
     const handlePlayPause = () => {
         setIsPlaying(prev => !prev);
     };
 
+    // Update handleSeek to use state
     const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newIndex = Number(event.target.value);
         setCurrentIndex(newIndex);
+        prevEditingLineRef.current = null;
         
         if (isPlaying) {
             setIsPlaying(false);
@@ -386,7 +401,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                 style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '80vh', aspectRatio: `${width} / ${height}` }}
             />
             <div className="controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
-                <div className="time-display" style={{ 
+                <div className="time-display" style={{
                     fontFamily: 'monospace',
                     fontSize: '0.875rem',
                     color: '#fff',
@@ -418,8 +433,8 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                         style={{ width: '100%' }}
                     />
                 </div>
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     size="icon"
                     onClick={handlePlayPause}
                     className="rounded size-10 hover:bg-black border-white/10">
