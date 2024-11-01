@@ -9,7 +9,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #18181b;
     --foreground: #ededed;
   }
 }
@@ -26,14 +26,6 @@ body {
   align-items: center;
 }
 
-/* .responsive-canvas {
-  width: 100%;
-  height: auto;
-  max-height: 80vh;
-  aspect-ratio: attr(width) / attr(height);
-  
-} */
-
 .controls {
   display: flex;
   align-items: center;
@@ -41,7 +33,7 @@ body {
   width:100%;
 }
 
-.control-button {
+/* .control-button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -49,7 +41,7 @@ body {
   border-radius: 5px;
   cursor: pointer;
   margin-right: 10px;
-}
+} */
 
 .seek-bar-container {
   position: relative;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { FaPlay, FaPause } from 'react-icons/fa';
+import { Button } from "@/components/ui/button";
 
 interface PreviewProps {
     lines: string[];
@@ -356,9 +357,13 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
                         style={{ width: '100%' }}
                     />
                 </div>
-                <button type="button" onClick={handlePlayPause} className="control-button">
-                    {isPlaying ? <FaPause /> : <FaPlay />}
-                </button>
+                <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={handlePlayPause}
+                    className="rounded size-10 hover:bg-black border-white/10">
+                    {isPlaying ? <FaPause className="!size-3" /> : <FaPlay className="!size-3" />}
+                </Button>
             </div>
         </div>
     );

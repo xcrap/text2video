@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Preview from '@/components/Preview';
-// import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Home() {
   const [textInput, setTextInput] = useState('');
@@ -39,6 +46,10 @@ export default function Home() {
     // Generate and export the video
   };
 
+  const handleVideoSizeChange = (value: string) => {
+    setVideoSize(value);
+  };
+
   return (
     <div className="p-4 flex">
       <div className="w-1/2 pr-2">
@@ -50,22 +61,24 @@ export default function Home() {
           placeholder="Enter text here..."
           className="w-full min-h-64 p-2 border rounded bg-black text-white focus:outline-none"
         />
-        <div className="mt-4">
+        <div className="mt-4 flex items-center">
           <label htmlFor="videoSize" className="mr-2">Video Size:</label>
-          <select
-            id="videoSize"
-            value={videoSize}
-            onChange={(e) => setVideoSize(e.target.value)}
-            className="border p-1 rounded bg-black text-white"
-          >
-            <option value="1024x1024">1:1 (1024x1024)</option>
-            <option value="1080x1920">Instagram Story Vertical (1080x1920)</option>
-            <option value="1920x1080">Landscape (1920x1080)</option>
-          </select>
+          <Select value={videoSize} onValueChange={handleVideoSizeChange}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Select video size" />
+            </SelectTrigger>
+            <SelectContent className="bg-black">
+              <SelectItem value="1024x1024">1:1 (1024x1024)</SelectItem>
+              <SelectItem value="1080x1920">Instagram Story Vertical (1080x1920)</SelectItem>
+              <SelectItem value="1920x1080">Landscape (1920x1080)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <button type="button" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded" onClick={handleGenerate}>
+        <Button 
+          onClick={handleGenerate}
+          className="mt-4">
           Generate Video
-        </button>
+        </Button>
       </div>
       <div className="w-1/2 pl-2">
         <Preview 
