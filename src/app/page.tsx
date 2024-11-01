@@ -59,12 +59,12 @@ export default function Home() {
           onClick={handleClick}
           onKeyUp={handleKeyUp}
           placeholder="Enter text here..."
-          className="w-full min-h-72 p-2 border border-neutral-600 rounded bg-neutral-900 text-white focus:outline-none"
+          className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white focus:outline-none shadow-lg"
         />
       </div>
       <div className="w-1/2 pl-2">
       <div className="mb-4 flex items-center">
-          <label htmlFor="videoSize" className="mr-2">Video Size:</label>
+          <label htmlFor="videoSize" className="mr-4">Video Size</label>
           <Select value={videoSize} onValueChange={handleVideoSizeChange}>
             <SelectTrigger className="w-[240px] rounded border-white/10">
               <SelectValue placeholder="Select video size" />
