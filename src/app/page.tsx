@@ -123,7 +123,7 @@ export default function Home() {
 							Slide Duration <i>--duration (seconds)</i>
 						</li>
 						<li>
-							Text Color <i>--color (color)</i>
+							Text Color <i>--color (color or hex color)</i>
 						</li>
 						<li>
 							Text Size: <i>--fontxs, --fontsm, --fontlg, --fontxl</i>
