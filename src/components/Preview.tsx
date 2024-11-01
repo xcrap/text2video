@@ -6,9 +6,12 @@ import { FaPlay, FaPause } from 'react-icons/fa';
 interface PreviewProps {
     lines: string[];
     videoSize: string;
+    currentEditingLine?: number; // Add this prop
 }
 
-export default function Preview({ lines, videoSize }: PreviewProps) {
+export default function Preview({ lines, videoSize, currentEditingLine }: PreviewProps) {
+    console.log('Preview component received props:', { lines, videoSize, currentEditingLine });
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,6 +20,7 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
     const [markers, setMarkers] = useState<number[]>([]);
     const [width, height] = videoSize.split('x').map(Number);
     const [totalDurationSecs, setTotalDurationSecs] = useState(0);
+    const [lineStartFrames, setLineStartFrames] = useState<number[]>([]);
 
     const parseHTML = useCallback((context: CanvasRenderingContext2D, html: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
         const tempDiv = document.createElement('div');
@@ -189,6 +193,7 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
         return formatTime(currentIndex / frameRate);
     };
 
+    // Single effect to handle frame generation
     useEffect(() => {
         if (!canvasRef.current || lines.length === 0) return;
 
@@ -198,9 +203,14 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
 
         const newFrames: string[] = [];
         const newMarkers: number[] = [];
+        const newLineStartFrames: number[] = [];
         let totalDuration = 0;
 
         for (const line of lines) {
+            const startFrame = newFrames.length;
+            console.log(`Line ${newLineStartFrames.length} starts at frame:`, startFrame);
+            newLineStartFrames.push(startFrame);
+            
             const [text, ...optionsArr] = line.split('--');
             const optionsStr = optionsArr.join('--');
             const durationMatch = optionsStr.match(/duration\s+(\d+)/);
@@ -229,29 +239,66 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
             newMarkers.push(totalDuration);
         }
 
+        console.log('Final line start frames:', newLineStartFrames);
         setFrames(newFrames);
         setMarkers(newMarkers);
-        setCurrentIndex(0);
+        setLineStartFrames(newLineStartFrames);
         setTotalDurationSecs(totalDuration);
-    }, [lines, width, height, parseHTML]);
 
+        // Initialize to the correct line
+        if (currentEditingLine !== undefined) {
+            setCurrentIndex(newLineStartFrames[currentEditingLine]);
+        } else {
+            setCurrentIndex(0);
+        }
+    }, [lines, width, height, parseHTML, currentEditingLine]);
+
+    // Simplified playback effect
     useEffect(() => {
         if (isPlaying && frames.length > 0) {
             const id = setInterval(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % frames.length);
-            }, 1000 / 30); // 30 FPS
+                setCurrentIndex(prevIndex => {
+                    const nextIndex = prevIndex + 1;
+                    if (nextIndex >= frames.length) {
+                        setIsPlaying(false);
+                        return prevIndex;
+                    }
+                    return nextIndex;
+                });
+            }, 1000 / 30);
             intervalIdRef.current = id;
-        } else if (intervalIdRef.current) {
-            clearInterval(intervalIdRef.current);
-            intervalIdRef.current = null;
         }
 
         return () => {
             if (intervalIdRef.current) {
                 clearInterval(intervalIdRef.current);
+                intervalIdRef.current = null;
             }
         };
-    }, [isPlaying, frames]);
+    }, [isPlaying, frames.length]);
+
+    // Effect to handle currentEditingLine changes - simplified
+    useEffect(() => {
+        console.log('Current editing line changed to:', currentEditingLine);
+        console.log('Line start frames:', lineStartFrames);
+        
+        if (currentEditingLine === undefined || isPlaying) return;
+        
+        // Stop playback and jump to the start of the selected line
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+        
+        const targetFrame = lineStartFrames[currentEditingLine];
+        console.log('Target frame for line:', targetFrame);
+        
+        if (targetFrame !== undefined) {
+            console.log('Setting current index to:', targetFrame);
+            setCurrentIndex(targetFrame);
+            setIsPlaying(false);
+        }
+    }, [currentEditingLine, lineStartFrames, isPlaying]);
 
     useEffect(() => {
         if (!canvasRef.current || frames.length === 0) return;
@@ -272,11 +319,21 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
     };
 
     const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCurrentIndex(Number(event.target.value));
+        const newIndex = Number(event.target.value);
+        setCurrentIndex(newIndex);
+        
         if (isPlaying) {
             setIsPlaying(false);
         }
     };
+
+    // Log current state in render
+    console.log('Render state:', {
+        currentEditingLine,
+        currentIndex,
+        lineStartFrames,
+        isPlaying
+    });
 
     return (
         <div className="preview">

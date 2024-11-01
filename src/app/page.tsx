@@ -8,11 +8,22 @@ export default function Home() {
   const [textInput, setTextInput] = useState('');
   const [lines, setLines] = useState<string[]>([]);
   const [videoSize, setVideoSize] = useState('1024x1024');
+  const [currentEditingLine, setCurrentEditingLine] = useState<number>(0);
 
   useEffect(() => {
     const newLines = textInput.split('\n');
     setLines(newLines);
-  }, [textInput]); // Add dependency array here
+  }, [textInput]);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextInput(e.target.value);
+    
+    // Calculate current line based on cursor position
+    const cursorPosition = e.target.selectionStart;
+    const textBeforeCursor = e.target.value.substring(0, cursorPosition);
+    const lineNumber = textBeforeCursor.split('\n').length - 1;
+    setCurrentEditingLine(lineNumber);
+  };
 
   const handleGenerate = () => {
     // Generate and export the video
@@ -23,7 +34,9 @@ export default function Home() {
       <div className="w-1/2 pr-2">
         <textarea
           value={textInput}
-          onChange={(e) => setTextInput(e.target.value)}
+          onChange={handleTextChange}
+          onClick={handleTextChange} // Also update on click
+          onKeyUp={handleTextChange} // Update on keyboard navigation
           placeholder="Enter text here..."
           className="w-full min-h-64 p-2 border rounded bg-black text-white focus:outline-none"
         />
@@ -45,7 +58,11 @@ export default function Home() {
         </button>
       </div>
       <div className="w-1/2 pl-2">
-        <Preview lines={lines} videoSize={videoSize} />
+        <Preview 
+          lines={lines} 
+          videoSize={videoSize} 
+          currentEditingLine={currentEditingLine} 
+        />
       </div>
     </div>
   );
