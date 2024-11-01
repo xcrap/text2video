@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.preview {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.video-clip {
+  background-color: #f9fafb;
+}

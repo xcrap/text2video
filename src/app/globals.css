@@ -19,3 +19,67 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* .responsive-canvas {
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  aspect-ratio: attr(width) / attr(height);
+  
+} */
+
+.controls {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  width:100%;
+}
+
+.control-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.seek-bar-container {
+  position: relative;
+  width: 100%;
+  display:flex;
+  justify-content: center;
+  height:30px;
+}
+
+.seek-bar {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.seek-bar-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.seek-bar-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transform: translateX(-50%);
+}
