@@ -2,27 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import Preview from '@/components/Preview';
-import Image from "next/image";
+// import Image from "next/image";
 
 export default function Home() {
   const [textInput, setTextInput] = useState('');
   const [lines, setLines] = useState<string[]>([]);
   const [videoSize, setVideoSize] = useState('1024x1024');
-  const [currentEditingLine, setCurrentEditingLine] = useState<number>(0);
+  const [currentEditingLine, setCurrentEditingLine] = useState<number | null>(null);
 
   useEffect(() => {
     const newLines = textInput.split('\n');
     setLines(newLines);
   }, [textInput]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setTextInput(e.target.value);
-    
-    // Calculate current line based on cursor position
-    const cursorPosition = e.target.selectionStart;
-    const textBeforeCursor = e.target.value.substring(0, cursorPosition);
+  const updateCurrentLine = (element: HTMLTextAreaElement) => {
+    const cursorPosition = element.selectionStart;
+    const textBeforeCursor = element.value.substring(0, cursorPosition);
     const lineNumber = textBeforeCursor.split('\n').length - 1;
     setCurrentEditingLine(lineNumber);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextInput(e.target.value);
+    updateCurrentLine(e.target);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    updateCurrentLine(e.currentTarget);
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    updateCurrentLine(e.currentTarget);
   };
 
   const handleGenerate = () => {
@@ -35,8 +45,8 @@ export default function Home() {
         <textarea
           value={textInput}
           onChange={handleTextChange}
-          onClick={handleTextChange} // Also update on click
-          onKeyUp={handleTextChange} // Update on keyboard navigation
+          onClick={handleClick}
+          onKeyUp={handleKeyUp}
           placeholder="Enter text here..."
           className="w-full min-h-64 p-2 border rounded bg-black text-white focus:outline-none"
         />

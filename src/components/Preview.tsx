@@ -6,12 +6,10 @@ import { FaPlay, FaPause } from 'react-icons/fa';
 interface PreviewProps {
     lines: string[];
     videoSize: string;
-    currentEditingLine?: number; // Add this prop
+    currentEditingLine: number | null;
 }
 
 export default function Preview({ lines, videoSize, currentEditingLine }: PreviewProps) {
-    console.log('Preview component received props:', { lines, videoSize, currentEditingLine });
-
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -208,7 +206,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
 
         for (const line of lines) {
             const startFrame = newFrames.length;
-            console.log(`Line ${newLineStartFrames.length} starts at frame:`, startFrame);
+            // console.log(`Line ${newLineStartFrames.length} starts at frame:`, startFrame);
             newLineStartFrames.push(startFrame);
             
             const [text, ...optionsArr] = line.split('--');
@@ -239,21 +237,26 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
             newMarkers.push(totalDuration);
         }
 
-        console.log('Final line start frames:', newLineStartFrames);
+        // console.log('Final line start frames:', newLineStartFrames);
         setFrames(newFrames);
         setMarkers(newMarkers);
         setLineStartFrames(newLineStartFrames);
         setTotalDurationSecs(totalDuration);
+        setCurrentIndex(0); // Always start from beginning when frames change
+    }, [lines, width, height, parseHTML]);
 
-        // Initialize to the correct line
-        if (currentEditingLine !== undefined) {
-            setCurrentIndex(newLineStartFrames[currentEditingLine]);
-        } else {
-            setCurrentIndex(0);
+    // Separate effect for handling editing - simplified without isPlaying
+    useEffect(() => {
+        if (currentEditingLine === null || !lineStartFrames.length) return;
+        
+        // Only update index when editing line changes
+        const targetFrame = lineStartFrames[currentEditingLine];
+        if (targetFrame !== undefined) {
+            setCurrentIndex(targetFrame);
         }
-    }, [lines, width, height, parseHTML, currentEditingLine]);
+    }, [currentEditingLine, lineStartFrames]); // Remove isPlaying from dependencies
 
-    // Simplified playback effect
+    // Keep playback effect separate and simple
     useEffect(() => {
         if (isPlaying && frames.length > 0) {
             const id = setInterval(() => {
@@ -277,29 +280,6 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
         };
     }, [isPlaying, frames.length]);
 
-    // Effect to handle currentEditingLine changes - simplified
-    useEffect(() => {
-        console.log('Current editing line changed to:', currentEditingLine);
-        console.log('Line start frames:', lineStartFrames);
-        
-        if (currentEditingLine === undefined || isPlaying) return;
-        
-        // Stop playback and jump to the start of the selected line
-        if (intervalIdRef.current) {
-            clearInterval(intervalIdRef.current);
-            intervalIdRef.current = null;
-        }
-        
-        const targetFrame = lineStartFrames[currentEditingLine];
-        console.log('Target frame for line:', targetFrame);
-        
-        if (targetFrame !== undefined) {
-            console.log('Setting current index to:', targetFrame);
-            setCurrentIndex(targetFrame);
-            setIsPlaying(false);
-        }
-    }, [currentEditingLine, lineStartFrames, isPlaying]);
-
     useEffect(() => {
         if (!canvasRef.current || frames.length === 0) return;
 
@@ -315,7 +295,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
     }, [currentIndex, frames, width, height]);
 
     const handlePlayPause = () => {
-        setIsPlaying(!isPlaying);
+        setIsPlaying(prev => !prev);
     };
 
     const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,12 +308,12 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
     };
 
     // Log current state in render
-    console.log('Render state:', {
-        currentEditingLine,
-        currentIndex,
-        lineStartFrames,
-        isPlaying
-    });
+    // console.log('Render state:', {
+    //     currentEditingLine,
+    //     currentIndex,
+    //     lineStartFrames,
+    //     isPlaying
+    // });
 
     return (
         <div className="preview">
