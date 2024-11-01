@@ -173,15 +173,22 @@ export default function Home() {
 					<p className="uppercase font-bold mb-2">Properties</p>
 					<ul>
 						<li>
-							Slide Duration <i>--duration (seconds)</i>{" "}
-							<span className="ml-2 opacity-30">Default 3 seconds</span>
+							<i>--duration (seconds)</i>{" "}
+							<span className="ml-2 opacity-30">
+								Sets the slide duration, default 3 seconds
+							</span>
 						</li>
 						<li>
-							Text Color <i>--color (color or hex color)</i>
-							<span className="ml-2 opacity-30">Default white</span>
+							<i>--color (color or hex color)</i>
+							<span className="ml-2 opacity-30">
+								Sets the text color, default white
+							</span>
 						</li>
 						<li>
-							Text Size: <i>--fontxs, --fontsm, --fontlg, --fontxl</i>
+							<i>--fontxs, --fontsm, --fontlg, --fontxl</i>
+							<span className="ml-2 opacity-30">
+								Increases or decreases text size
+							</span>
 						</li>
 					</ul>
 				</div>
