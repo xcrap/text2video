@@ -228,7 +228,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
             const y = height / 2;
             parseHTML(context, text.trim(), x, y, width - 20, lineHeight);
 
-            const frame = canvas.toDataURL('image/jpeg');
+            const frame = canvas.toDataURL('image/webp', 0.8);
             const frameCount = duration * 30; // Assuming 30 FPS
             for (let i = 0; i < frameCount; i++) {
                 newFrames.push(frame);
