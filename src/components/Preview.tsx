@@ -392,6 +392,107 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
     //     isPlaying
     // });
 
+    // Add frame cache
+    const frameCache = useRef<Map<string, string>>(new Map());
+
+    // Memoize frame generation
+    const generateFrame = useCallback((
+        text: string, 
+        options: { duration: number; color: string; textSize: string },
+        context: CanvasRenderingContext2D,
+        width: number,
+        height: number
+    ) => {
+        const cacheKey = `${text}-${JSON.stringify(options)}-${width}-${height}-${selectedFont}`;
+        
+        if (frameCache.current.has(cacheKey)) {
+            const cachedFrame = frameCache.current.get(cacheKey);
+            if (cachedFrame) {
+                return cachedFrame;
+            }
+        }
+
+        // Clear background
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, width, height);
+
+        // Set color and call parseHTML
+        context.fillStyle = options.color;
+        const x = width / 2;
+        const y = height / 2;
+        
+        const textSizeMultiplier = options.textSize ? 
+            TEXT_SIZE_MULTIPLIERS[options.textSize as keyof typeof TEXT_SIZE_MULTIPLIERS] :
+            TEXT_SIZE_MULTIPLIERS.base;
+        
+        const adjustedFontSize = BASE_FONT_SIZE * textSizeMultiplier;
+        fontStyleRef.current = createFontStyles(adjustedFontSize, selectedFont);
+        
+        parseHTML(context, text.trim(), x, y, width - adjustedFontSize, adjustedFontSize * 1.2);
+        
+        if (!canvasRef.current) return '';
+        const frame = canvasRef.current.toDataURL('image/webp', 0.8);
+        frameCache.current.set(cacheKey, frame);
+        
+        return frame;
+    }, [BASE_FONT_SIZE, selectedFont, parseHTML]);
+
+    // Update frame generation effect to use cache
+    useEffect(() => {
+        if (!canvasRef.current || lines.length === 0 || !isFontLoaded) return;
+
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        const newFrames: string[] = [];
+        const newMarkers: number[] = [];
+        const newLineStartFrames: number[] = [];
+        let totalDuration = 0;
+
+        requestAnimationFrame(() => {
+            for (const line of lines) {
+                const startFrame = newFrames.length;
+                newLineStartFrames.push(startFrame);
+
+                const [text, ...optionsArr] = line.split('--');
+                const optionsStr = optionsArr.join('--');
+
+                // Parse options
+                const durationMatch = optionsStr.match(/duration\s+(\d+)/);
+                const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
+                const textSizeMatch = optionsStr.match(/text(xs|sm|lg|xl)\b/);
+
+                const options = {
+                    duration: durationMatch ? Number.parseInt(durationMatch[1], 10) : 3,
+                    color: colorMatch ? colorMatch[1] : '#fff',
+                    textSize: textSizeMatch ? textSizeMatch[1] : 'base'
+                };
+
+                const frame = generateFrame(text, options, context, width, height);
+                const frameCount = options.duration * 30;
+                
+                for (let i = 0; i < frameCount; i++) {
+                    newFrames.push(frame);
+                }
+
+                totalDuration += options.duration;
+                newMarkers.push(totalDuration);
+            }
+
+            setFrames(newFrames);
+            setMarkers(newMarkers);
+            setLineStartFrames(newLineStartFrames);
+            setTotalDurationSecs(totalDuration);
+        });
+
+    }, [lines, width, height, generateFrame, isFontLoaded]);
+
+    // Clear cache when font changes
+    useEffect(() => {
+        frameCache.current.clear();
+    }, []);
+
     return (
         <div className={`preview ${fontClass}`}>
             <canvas

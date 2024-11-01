@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Preview from '@/components/Preview';
 import { Button } from "@/components/ui/button";
 import {
@@ -39,11 +39,17 @@ export default function Home() {
     setCurrentEditingLine(lineNumber);
   };
 
+  const debouncedSetLines = useCallback((newText: string) => {
+    const timeoutId = setTimeout(() => {
+      setLines(newText.split('\n'));
+    }, 150); // 150ms debounce
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setTextInput(newText);
-    // Update lines immediately with the new text
-    setLines(newText.split('\n'));
+    debouncedSetLines(newText);
     updateCurrentLine(e.target);
   };
 
