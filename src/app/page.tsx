@@ -108,37 +108,13 @@ export default function Home() {
 	return (
 		<div className="p-4 flex">
 			<div className="w-1/2 pr-2">
-				<textarea
-					value={textInput}
-					onChange={handleTextChange}
-					onClick={handleClick}
-					onKeyUp={handleKeyUp}
-					placeholder="Enter text here..."
-					className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white focus:outline-none shadow-lg"
-				/>
-				<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
-					<p className="uppercase font-bold mb-2">Properties</p>
-					<ul>
-						<li>
-							Slide Duration <i>--duration (seconds)</i>
-						</li>
-						<li>
-							Text Color <i>--color (color or hex color)</i>
-						</li>
-						<li>
-							Text Size: <i>--fontxs, --fontsm, --fontlg, --fontxl</i>
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div className="w-1/2 pl-2">
-				<div className="mb-4 flex flex-col gap-4">
+				<div className="mb-4 flex flex-col p-6 border border-neutral-800 rounded-xl bg-neutral-900 gap-6">
 					<div className="flex items-center">
 						<label htmlFor="videoSize" className="mr-4">
 							Video Size
 						</label>
 						<Select value={videoSize} onValueChange={handleVideoSizeChange}>
-							<SelectTrigger className="w-[240px] rounded border-white/10">
+							<SelectTrigger className="w-[280px] rounded border-white/10">
 								<SelectValue placeholder="Select video size" />
 							</SelectTrigger>
 							<SelectContent className="bg-black ">
@@ -168,6 +144,30 @@ export default function Home() {
 						</Select>
 					</div>
 				</div>
+				<textarea
+					value={textInput}
+					onChange={handleTextChange}
+					onClick={handleClick}
+					onKeyUp={handleKeyUp}
+					placeholder="Enter text here..."
+					className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-800 text-white focus:outline-none shadow-lg"
+				/>
+				<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
+					<p className="uppercase font-bold mb-2">Properties</p>
+					<ul>
+						<li>
+							Slide Duration <i>--duration (seconds)</i>
+						</li>
+						<li>
+							Text Color <i>--color (color or hex color)</i>
+						</li>
+						<li>
+							Text Size: <i>--fontxs, --fontsm, --fontlg, --fontxl</i>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div className="w-1/2 pl-2">
 				<Preview
 					ref={previewRef}
 					lines={lines}
