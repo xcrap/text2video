@@ -1,0 +1,2 @@
+When making edits, please review the full file so see if any problem is related with another part of the code.
+When writing JS or TSX, make sure you compile with Biome, meaning, use for...of instead of ForEach, use Template Literals over string concatenation. 

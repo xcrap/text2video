@@ -17,97 +17,149 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
     const [markers, setMarkers] = useState<number[]>([]);
     const [width, height] = videoSize.split('x').map(Number);
 
-    // const wrapText = (context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
-    //     const words = text.split(' ');
-    //     let line = '';
-    //     let testLine = '';
-    //     let testWidth: number;
-    //     let currentY = y;
-
-    //     for (let n = 0; n < words.length; n++) {
-    //         testLine = `${line}${words[n]} `;
-    //         testWidth = context.measureText(testLine).width;
-    //         if (testWidth > maxWidth && n > 0) {
-    //             context.fillText(line, x, currentY);
-    //             line = `${words[n]} `;
-    //             currentY += lineHeight;
-    //         } else {
-    //             line = testLine;
-    //         }
-    //     }
-    //     context.fillText(line, x, currentY);
-    //     return currentY + lineHeight;
-    // };
-
     const parseHTML = useCallback((context: CanvasRenderingContext2D, html: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
         const elements = tempDiv.childNodes;
+        const color = context.fillStyle;
+
+        interface TextSegment {
+            text: string;
+            styles: { bold: boolean; italic: boolean; underline: boolean };
+        }
+
+        const segments: TextSegment[] = [];
         let currentY = y;
-        const currentX = x;
-        const defaultFont = context.font;
 
-        const renderText = (text: string, isUnderline = false) => {
-            const words = text.split(' ');
-            let line = '';
+        const applyStyles = (styles: { bold: boolean; italic: boolean; underline: boolean }) => {
+            const fontStyle = [
+                styles.bold ? 'bold' : '',
+                styles.italic ? 'italic' : '',
+                '48px',
+                'Arial'
+            ].filter(Boolean).join(' ');
+            context.font = fontStyle;
+            context.fillStyle = color;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+        };
 
+        const measureText = (text: string, styles: { bold: boolean; italic: boolean; underline: boolean }) => {
+            applyStyles(styles);
+            return context.measureText(text).width;
+        };
+
+        const drawText = (text: string, styles: { bold: boolean; italic: boolean; underline: boolean }, xPos: number, yPos: number) => {
+            applyStyles(styles);
+            context.fillText(text, xPos, yPos);
+
+            if (styles.underline) {
+                const textWidth = context.measureText(text).width;
+                context.beginPath();
+                context.moveTo(xPos - textWidth/2, yPos + 2);
+                context.lineTo(xPos + textWidth/2, yPos + 2);
+                context.stroke();
+            }
+        };
+
+        const processNode = (node: ChildNode, parentStyles: { bold: boolean; italic: boolean; underline: boolean }) => {
+            const currentStyles = { ...parentStyles };
+
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as HTMLElement;
+                
+                switch (element.tagName) {
+                    case 'B':
+                        currentStyles.bold = true;
+                        break;
+                    case 'I':
+                        currentStyles.italic = true;
+                        break;
+                    case 'U':
+                        currentStyles.underline = true;
+                        break;
+                    case 'BR':
+                        segments.push({ text: '\n', styles: currentStyles });
+                        return;
+                }
+            }
+
+            if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+                segments.push({ 
+                    text: node.textContent,
+                    styles: currentStyles
+                });
+            }
+
+            if (node.childNodes?.length) {
+                for (const child of node.childNodes) {
+                    processNode(child, currentStyles);
+                }
+            }
+        };
+
+        // First pass: collect all segments with their styles
+        const initialStyles = { bold: false, italic: false, underline: false };
+        for (const node of elements) {
+            processNode(node, initialStyles);
+        }
+
+        // Second pass: process line wrapping while maintaining styles
+        let currentLine: TextSegment[] = [];
+        let currentLineWidth = 0;
+
+        const drawCurrentLine = () => {
+            if (currentLine.length === 0) return;
+
+            // Calculate total width for centering
+            let totalWidth = 0;
+            for (const segment of currentLine) {
+                totalWidth += measureText(segment.text, segment.styles);
+            }
+
+            // Draw each segment
+            let xOffset = x - totalWidth / 2;
+            for (const segment of currentLine) {
+                const segmentWidth = measureText(segment.text, segment.styles);
+                drawText(segment.text, segment.styles, xOffset + segmentWidth / 2, currentY);
+                xOffset += segmentWidth;
+            }
+
+            currentY += lineHeight;
+            currentLine = [];
+            currentLineWidth = 0;
+        };
+
+        // Process all segments
+        for (const segment of segments) {
+            if (segment.text === '\n') {
+                drawCurrentLine();
+                continue;
+            }
+
+            const words = segment.text.trim().split(/\s+/);
             for (const word of words) {
-                const testLine = line + (line ? ' ' : '') + word;
-                const metrics = context.measureText(testLine);
-
-                if (metrics.width > maxWidth && line !== '') {
-                    context.fillText(line, currentX, currentY);
-                    if (isUnderline) {
-                        context.beginPath();
-                        context.moveTo(currentX, currentY + 2);
-                        context.lineTo(currentX + context.measureText(line).width, currentY + 2);
-                        context.stroke();
-                    }
-                    line = word;
-                    currentY += lineHeight;
-                } else {
-                    line = testLine;
+                const wordWidth = measureText(word, segment.styles);
+                const spaceWidth = measureText(' ', segment.styles);
+                
+                if (currentLineWidth + wordWidth > maxWidth && currentLine.length > 0) {
+                    drawCurrentLine();
                 }
-            }
 
-            if (line) {
-                context.fillText(line, currentX, currentY);
-                if (isUnderline) {
-                    context.beginPath();
-                    context.moveTo(currentX, currentY + 2);
-                    context.lineTo(currentX + context.measureText(line).width, currentY + 2);
-                    context.stroke();
+                if (currentLine.length > 0) {
+                    currentLine.push({ text: ' ', styles: segment.styles });
+                    currentLineWidth += spaceWidth;
                 }
-                currentY += lineHeight;
+
+                currentLine.push({ text: word, styles: segment.styles });
+                currentLineWidth += wordWidth;
             }
-        };
+        }
 
-        const processElement = (element: ChildNode) => {
-            if (element.nodeType === Node.TEXT_NODE) {
-                renderText(element.textContent || '');
-            } else if (element.nodeType === Node.ELEMENT_NODE) {
-                const el = element as HTMLElement;
-                const originalFont = context.font;
-
-                if (el.tagName === 'BR') {
-                    currentY += lineHeight;
-                } else {
-                    if (el.tagName === 'B') {
-                        context.font = `bold ${defaultFont}`;
-                    } else if (el.tagName === 'I') {
-                        context.font = `italic ${defaultFont}`;
-                    } else if (el.tagName === 'U') {
-                        context.font = `${defaultFont}`;
-                    }
-
-                    Array.from(el.childNodes).forEach(processElement);
-                    context.font = originalFont;
-                }
-            }
-        };
-
-        Array.from(elements).forEach(processElement);
-        context.font = defaultFont; // Reset to default font
+        // Draw any remaining text
+        if (currentLine.length > 0) {
+            drawCurrentLine();
+        }
     }, []);
 
     useEffect(() => {
@@ -129,14 +181,13 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
             const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
             const color = colorMatch ? colorMatch[1] : '#fff';
 
+            // Clear background
             context.fillStyle = '#000';
             context.fillRect(0, 0, width, height);
-            context.fillStyle = color;
-            context.font = '48px Arial';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
 
-            const lineHeight = 48; // Same as font size
+            // Set color and call parseHTML
+            context.fillStyle = color;
+            const lineHeight = 48;
             const x = width / 2;
             const y = height / 2;
             parseHTML(context, text.trim(), x, y, width - 20, lineHeight);
