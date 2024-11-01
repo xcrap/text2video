@@ -1,8 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Text2Video - Text Animation Video Generator
+
+A web-based tool that generates video animations from text input.<br>It allows you to create videos based on dynamic text animations with various styling options.
+
+## Features
+
+- **Real-time Preview**: Watch your text animations instantly as you edit them
+- **Custom Text Styling**:
+  - Multiple font sizes (xs, sm, base, lg, xl)
+  - Custom colors (hex and named colors supported)
+  - Text formatting (bold, italic, underline)
+  - Adjustable duration per text segment
+- **Video Controls**:
+  - Play/Pause functionality
+  - Seek bar with segment markers
+  - Time display showing current position and total duration
+  - Frame-by-frame navigation
+- **Export Capabilities**: Generate video frames for further processing
+- **Responsive Design**: Works across different screen sizes
+
+## Usage
+
+### Text Format Syntax
+
+Your text here --duration 3 --color #ffffff --textlg
+
+Each line in the editor represents a text segment with the following format:
+
+Options:
+- --duration n: Duration in seconds (default: 3)
+- --color value: Text color (hex or named color)
+- --text[size]: Size modifier (xs, sm, lg, xl)
+
+Text Formatting:
+- Use <b>text</b> for bold
+- Use <i>text</i> for italic
+- Use <u>text</u> for underline
+
+## Installation
+
+1. Clone the repository:
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
 
 ## Getting Started
-
-First, run the development server:
+After installation, start the development server:
 
 ```bash
 npm run dev
@@ -14,23 +64,8 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to open the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Disclaimer
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This is a work in progress, mostly was done with CoPilot + Claude 3.5 Sonnet as my Next Skills are non existing. If you want to improve on the performance and funcionalities, you're more than welcome. 
