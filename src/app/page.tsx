@@ -10,17 +10,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { defaultFont, POPULAR_FONTS, loadFont, initializeFonts } from '@/utils/fonts';
+import type { NextFont } from 'next/dist/compiled/@next/font';
 
 export default function Home() {
   const [textInput, setTextInput] = useState('');
   const [lines, setLines] = useState<string[]>([]);
   const [videoSize, setVideoSize] = useState('1024x1024');
   const [currentEditingLine, setCurrentEditingLine] = useState<number | null>(null);
+  const [selectedFont, setSelectedFont] = useState('Roboto');
+  const [loadedFont, setLoadedFont] = useState<NextFont>(defaultFont);
 
+  // Initialize fonts on mount
   useEffect(() => {
-    const newLines = textInput.split('\n');
-    setLines(newLines);
-  }, [textInput]);
+    initializeFonts();
+  }, []);
+
+  // Simplify font loading effect
+  useEffect(() => {
+    const font = loadFont(selectedFont as typeof POPULAR_FONTS[number]);
+    setLoadedFont(font);
+  }, [selectedFont]);
 
   const updateCurrentLine = (element: HTMLTextAreaElement) => {
     const cursorPosition = element.selectionStart;
@@ -30,7 +40,10 @@ export default function Home() {
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setTextInput(e.target.value);
+    const newText = e.target.value;
+    setTextInput(newText);
+    // Update lines immediately with the new text
+    setLines(newText.split('\n'));
     updateCurrentLine(e.target);
   };
 
@@ -50,6 +63,10 @@ export default function Home() {
     setVideoSize(value);
   };
 
+  const handleFontChange = (value: string) => {
+    setSelectedFont(value);
+  };
+
   return (
     <div className="p-4 flex">
       <div className="w-1/2 pr-2">
@@ -63,23 +80,42 @@ export default function Home() {
         />
       </div>
       <div className="w-1/2 pl-2">
-      <div className="mb-4 flex items-center">
-          <label htmlFor="videoSize" className="mr-4">Video Size</label>
-          <Select value={videoSize} onValueChange={handleVideoSizeChange}>
-            <SelectTrigger className="w-[240px] rounded border-white/10">
-              <SelectValue placeholder="Select video size" />
-            </SelectTrigger>
-            <SelectContent className="bg-black ">
-              <SelectItem value="1024x1024">1:1 (1024x1024)</SelectItem>
-              <SelectItem value="1080x1920">Instagram Story Vertical (1080x1920)</SelectItem>
-              <SelectItem value="1920x1080">Landscape (1920x1080)</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mb-4 flex flex-col gap-4">
+          <div className="flex items-center">
+            <label htmlFor="videoSize" className="mr-4">Video Size</label>
+            <Select value={videoSize} onValueChange={handleVideoSizeChange}>
+              <SelectTrigger className="w-[240px] rounded border-white/10">
+                <SelectValue placeholder="Select video size" />
+              </SelectTrigger>
+              <SelectContent className="bg-black ">
+                <SelectItem value="1024x1024">1:1 (1024x1024)</SelectItem>
+                <SelectItem value="1080x1920">Instagram Story Vertical (1080x1920)</SelectItem>
+                <SelectItem value="1920x1080">Landscape (1920x1080)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center">
+            <label htmlFor="font" className="mr-4">Font</label>
+            <Select value={selectedFont} onValueChange={handleFontChange}>
+              <SelectTrigger className="w-[240px] rounded border-white/10">
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent className="bg-black">
+                {POPULAR_FONTS.map(font => (
+                  <SelectItem key={font} value={font}>
+                    {font}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Preview  
+        <Preview 
           lines={lines} 
           videoSize={videoSize} 
-          currentEditingLine={currentEditingLine} 
+          currentEditingLine={currentEditingLine}
+          selectedFont={selectedFont}
+          fontClass={loadedFont.className}
         />
         <Button 
           variant="outline" 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FaPlay, FaPause } from 'react-icons/fa';
 import { Button } from "@/components/ui/button";
 
@@ -8,9 +8,25 @@ interface PreviewProps {
     lines: string[];
     videoSize: string;
     currentEditingLine: number | null;
+    selectedFont: string;
+    fontClass: string;
 }
 
-export default function Preview({ lines, videoSize, currentEditingLine }: PreviewProps) {
+// Move font calculations outside component
+const calculateFontSize = (width: number, height: number) => Math.min(width, height) * 0.05;
+
+const createFontStyle = (fontSize: number, fontName: string, weight = '400', style = 'normal') => 
+  `${weight} ${style} ${fontSize}px "${fontName}"`;
+
+// First, create a helper function outside the component
+const createFontStyles = (fontSize: number, fontName: string) => ({
+    normal: createFontStyle(fontSize, fontName),
+    bold: createFontStyle(fontSize, fontName, 'bold'),
+    italic: createFontStyle(fontSize, fontName, '400', 'italic'),
+    boldItalic: createFontStyle(fontSize, fontName, 'bold', 'italic')
+});
+
+export default function Preview({ lines, videoSize, currentEditingLine, selectedFont, fontClass }: PreviewProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,8 +36,37 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
     const [width, height] = videoSize.split('x').map(Number);
     const [totalDurationSecs, setTotalDurationSecs] = useState(0);
     const [lineStartFrames, setLineStartFrames] = useState<number[]>([]);
+    const [isFontLoaded, setIsFontLoaded] = useState(false);
 
+    const BASE_FONT_SIZE = calculateFontSize(width, height);
+    const LINE_HEIGHT = BASE_FONT_SIZE * 1.2;
+
+    // Cache font styles
+    const fontStyleRef = useRef<ReturnType<typeof createFontStyles> | null>(null);
+
+    // Use useMemo to handle both initialization and updates
+    useMemo(() => {
+        fontStyleRef.current = createFontStyles(BASE_FONT_SIZE, selectedFont);
+    }, [BASE_FONT_SIZE, selectedFont]);
+
+    // Simplify font loading effect
+    useEffect(() => {
+        const checkFont = async () => {
+            await document.fonts.ready;
+            setIsFontLoaded(true);
+        };
+        
+        checkFont();
+    }, []);
+
+    // Update parseHTML to use fontClass
     const parseHTML = useCallback((context: CanvasRenderingContext2D, html: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+
+        // Add explicit dependency usage at the start of the function
+        if (!fontStyleRef.current || !selectedFont) {
+            return;
+        }
+
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
         const elements = tempDiv.childNodes;
@@ -37,12 +82,13 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
         let currentY = y;
 
         const applyStyles = (styles: { bold: boolean; italic: boolean; underline: boolean }) => {
-            const fontStyle = [
-                styles.bold ? 'bold' : '',
-                styles.italic ? 'italic' : '',
-                '48px',
-                'Arial'
-            ].filter(Boolean).join(' ');
+            // Use cached font styles instead of building string each time
+            if (!fontStyleRef.current) return;
+            const fontStyle = styles.bold && styles.italic ? fontStyleRef.current.boldItalic :
+                            styles.bold ? fontStyleRef.current.bold :
+                            styles.italic ? fontStyleRef.current.italic :
+                            fontStyleRef.current.normal;
+            
             context.font = fontStyle;
             context.fillStyle = color;
             context.textAlign = 'center';
@@ -179,7 +225,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
             drawCurrentLine();
             currentY += lineHeight; // Add final line height
         }
-    }, []);
+    }, [selectedFont]); // Only depend on selectedFont, not BASE_FONT_SIZE
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -194,7 +240,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
 
     // Single effect to handle frame generation
     useEffect(() => {
-        if (!canvasRef.current || lines.length === 0) return;
+        if (!canvasRef.current || lines.length === 0 || !isFontLoaded) return;
 
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -223,10 +269,9 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
 
             // Set color and call parseHTML
             context.fillStyle = color;
-            const lineHeight = 48;
             const x = width / 2;
             const y = height / 2;
-            parseHTML(context, text.trim(), x, y, width - 20, lineHeight);
+            parseHTML(context, text.trim(), x, y, width - BASE_FONT_SIZE, LINE_HEIGHT);
 
             const frame = canvas.toDataURL('image/webp', 0.8);
             const frameCount = duration * 30; // Assuming 30 FPS
@@ -244,7 +289,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
         setLineStartFrames(newLineStartFrames);
         setTotalDurationSecs(totalDuration);
         setCurrentIndex(0); // Always start from beginning when frames change
-    }, [lines, width, height, parseHTML]);
+    }, [lines, width, height, parseHTML, isFontLoaded, BASE_FONT_SIZE, LINE_HEIGHT]);
 
     // Separate effect for handling editing - simplified without isPlaying
     useEffect(() => {
@@ -317,7 +362,7 @@ export default function Preview({ lines, videoSize, currentEditingLine }: Previe
     // });
 
     return (
-        <div className="preview">
+        <div className={`preview ${fontClass}`}>
             <canvas
                 ref={canvasRef}
                 width={width}
