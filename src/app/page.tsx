@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Preview from "@/components/Preview";
+import type { PreviewRef } from "@/components/Preview";
 import { Button } from "@/components/ui/button";
 import {
 	Select,
@@ -17,6 +18,7 @@ import {
 	initializeFonts,
 } from "@/utils/fonts";
 import type { NextFont } from "next/dist/compiled/@next/font";
+import { exportToVideo } from "@/utils/videoExport";
 
 export default function Home() {
 	const [textInput, setTextInput] = useState("");
@@ -27,6 +29,8 @@ export default function Home() {
 	);
 	const [selectedFont, setSelectedFont] = useState("Roboto");
 	const [loadedFont, setLoadedFont] = useState<NextFont>(defaultFont);
+	const [isGenerating, setIsGenerating] = useState(false);
+	const previewRef = useRef<PreviewRef>(null);
 
 	// Initialize fonts on mount
 	useEffect(() => {
@@ -68,8 +72,19 @@ export default function Home() {
 		updateCurrentLine(e.currentTarget);
 	};
 
-	const handleGenerate = () => {
-		// Generate and export the video
+	const handleGenerate = async () => {
+		const canvas = document.querySelector("canvas");
+		if (!canvas || !previewRef.current) return;
+
+		try {
+			setIsGenerating(true);
+			const frames = previewRef.current.getFrames();
+			await exportToVideo(canvas, frames, 30);
+		} catch (error) {
+			console.error("Failed to generate video:", error);
+		} finally {
+			setIsGenerating(false);
+		}
 	};
 
 	const handleVideoSizeChange = (value: string) => {
@@ -144,6 +159,7 @@ export default function Home() {
 					</div>
 				</div>
 				<Preview
+					ref={previewRef}
 					lines={lines}
 					videoSize={videoSize}
 					currentEditingLine={currentEditingLine}
@@ -153,9 +169,10 @@ export default function Home() {
 				<Button
 					variant="outline"
 					onClick={handleGenerate}
+					disabled={isGenerating}
 					className="mt-4 rounded hover:bg-black border-white/10 uppercase font-bold"
 				>
-					Generate Video
+					{isGenerating ? "Generating..." : "Generate Video"}
 				</Button>
 			</div>
 		</div>
