@@ -19,7 +19,7 @@ import {
 } from "@/utils/fonts";
 import type { NextFont } from "next/dist/compiled/@next/font";
 import { exportToVideo } from "@/utils/videoExport";
-import { Progress } from "@/components/ui/progress"; // You'll need to create this or use a UI library
+import { Progress } from "@/components/ui/progress";
 
 export default function Home() {
 	const [textInput, setTextInput] = useState("");
@@ -114,15 +114,28 @@ export default function Home() {
 							Video Size
 						</label>
 						<Select value={videoSize} onValueChange={handleVideoSizeChange}>
-							<SelectTrigger className="w-[280px] rounded border-white/10">
+							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-xl">
 								<SelectValue placeholder="Select video size" />
 							</SelectTrigger>
-							<SelectContent className="bg-black ">
-								<SelectItem value="1024x1024">1:1 (1024x1024)</SelectItem>
-								<SelectItem value="1080x1920">
-									Instagram Story Vertical (1080x1920)
+							<SelectContent className="border border-neutral-800 bg-neutral-900 rounded-xl">
+								<SelectItem
+									value="1024x1024"
+									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+								>
+									1:1 (1024x1024)
 								</SelectItem>
-								<SelectItem value="1920x1080">Landscape (1920x1080)</SelectItem>
+								<SelectItem
+									value="1080x1920"
+									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+								>
+									Instagram Story (1080x1920)
+								</SelectItem>
+								<SelectItem
+									value="1920x1080"
+									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+								>
+									Landscape (1920x1080)
+								</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
@@ -131,12 +144,16 @@ export default function Home() {
 							Font
 						</label>
 						<Select value={selectedFont} onValueChange={handleFontChange}>
-							<SelectTrigger className="w-[240px] rounded border-white/10">
+							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-xl">
 								<SelectValue placeholder="Select font" />
 							</SelectTrigger>
-							<SelectContent className="bg-black">
+							<SelectContent className="border border-neutral-800 rounded-xl bg-neutral-900">
 								{POPULAR_FONTS.map((font) => (
-									<SelectItem key={font} value={font}>
+									<SelectItem
+										key={font}
+										value={font}
+										className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+									>
 										{font}
 									</SelectItem>
 								))}
