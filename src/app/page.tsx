@@ -189,7 +189,7 @@ export default function Home() {
 					variant="outline"
 					onClick={handleGenerate}
 					disabled={isGenerating}
-					className="mt-4 rounded hover:bg-black border-white/10 uppercase font-bold"
+					className="mt-4 rounded bg-sky-800 hover:bg-sky-900 border border-sky-700 uppercase font-bold outline-none focus:outline-none"
 				>
 					{isGenerating ? "Generating..." : "Generate Video"}
 				</Button>
