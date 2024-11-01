@@ -27,6 +27,7 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
         interface TextSegment {
             text: string;
             styles: { bold: boolean; italic: boolean; underline: boolean };
+            isBreak?: boolean;
         }
 
         const segments: TextSegment[] = [];
@@ -80,16 +81,24 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
                         currentStyles.underline = true;
                         break;
                     case 'BR':
-                        segments.push({ text: '\n', styles: currentStyles });
+                        segments.push({ 
+                            text: '', 
+                            styles: currentStyles, 
+                            isBreak: true 
+                        });
                         return;
                 }
             }
 
             if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-                segments.push({ 
-                    text: node.textContent,
-                    styles: currentStyles
-                });
+                // Only create segment if text content has non-whitespace characters
+                const trimmedText = node.textContent.trim();
+                if (trimmedText) {
+                    segments.push({ 
+                        text: trimmedText,
+                        styles: currentStyles
+                    });
+                }
             }
 
             if (node.childNodes?.length) {
@@ -126,40 +135,46 @@ export default function Preview({ lines, videoSize }: PreviewProps) {
                 xOffset += segmentWidth;
             }
 
-            currentY += lineHeight;
             currentLine = [];
             currentLineWidth = 0;
         };
 
         // Process all segments
         for (const segment of segments) {
-            if (segment.text === '\n') {
+            if (segment.isBreak) {
                 drawCurrentLine();
+                currentY += lineHeight; // Only increment Y here for breaks
                 continue;
             }
 
-            const words = segment.text.trim().split(/\s+/);
+            const words = segment.text.split(/\s+/);
+            let isFirstWord = true;
+
             for (const word of words) {
+                if (!word) continue;
+
                 const wordWidth = measureText(word, segment.styles);
-                const spaceWidth = measureText(' ', segment.styles);
                 
                 if (currentLineWidth + wordWidth > maxWidth && currentLine.length > 0) {
                     drawCurrentLine();
+                    currentY += lineHeight; // Add line height only for word wrapping
                 }
 
-                if (currentLine.length > 0) {
+                if (currentLine.length > 0 && !isFirstWord) {
                     currentLine.push({ text: ' ', styles: segment.styles });
-                    currentLineWidth += spaceWidth;
+                    currentLineWidth += measureText(' ', segment.styles);
                 }
 
                 currentLine.push({ text: word, styles: segment.styles });
                 currentLineWidth += wordWidth;
+                isFirstWord = false;
             }
         }
 
         // Draw any remaining text
         if (currentLine.length > 0) {
             drawCurrentLine();
+            currentY += lineHeight; // Add final line height
         }
     }, []);
 
