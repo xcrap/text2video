@@ -26,6 +26,15 @@ const createFontStyles = (fontSize: number, fontName: string) => ({
     boldItalic: createFontStyle(fontSize, fontName, 'bold', 'italic')
 });
 
+// Add font size multipliers
+const TEXT_SIZE_MULTIPLIERS = {
+    xs: 0.5,    // 50% of base size
+    sm: 0.75,   // 75% of base size
+    base: 1,    // default size
+    lg: 1.5,    // 150% of base size
+    xl: 2,      // 200% of base size
+} as const;
+
 export default function Preview({ lines, videoSize, currentEditingLine, selectedFont, fontClass }: PreviewProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -39,7 +48,6 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
     const [isFontLoaded, setIsFontLoaded] = useState(false);
 
     const BASE_FONT_SIZE = calculateFontSize(width, height);
-    const LINE_HEIGHT = BASE_FONT_SIZE * 1.2;
 
     // Cache font styles
     const fontStyleRef = useRef<ReturnType<typeof createFontStyles> | null>(null);
@@ -246,6 +254,8 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
         const context = canvas.getContext('2d');
         if (!context) return;
 
+        const LINE_HEIGHT = BASE_FONT_SIZE * 1.2;
+
         const newFrames: string[] = [];
         const newMarkers: number[] = [];
         const newLineStartFrames: number[] = [];
@@ -253,15 +263,26 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
 
         for (const line of lines) {
             const startFrame = newFrames.length;
-            // console.log(`Line ${newLineStartFrames.length} starts at frame:`, startFrame);
             newLineStartFrames.push(startFrame);
             
             const [text, ...optionsArr] = line.split('--');
             const optionsStr = optionsArr.join('--');
+            
+            // Parse all options
             const durationMatch = optionsStr.match(/duration\s+(\d+)/);
-            const duration = durationMatch ? Number.parseInt(durationMatch[1], 10) : 3;
             const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
+            const textSizeMatch = optionsStr.match(/text(xs|sm|lg|xl)\b/);
+            
+            // Get values from matches
+            const duration = durationMatch ? Number.parseInt(durationMatch[1], 10) : 3;
             const color = colorMatch ? colorMatch[1] : '#fff';
+            const textSizeMultiplier = textSizeMatch 
+                ? TEXT_SIZE_MULTIPLIERS[textSizeMatch[1] as keyof typeof TEXT_SIZE_MULTIPLIERS]
+                : TEXT_SIZE_MULTIPLIERS.base;
+
+            // Apply adjusted font size for this line
+            const adjustedFontSize = BASE_FONT_SIZE * textSizeMultiplier;
+            fontStyleRef.current = createFontStyles(adjustedFontSize, selectedFont);
 
             // Clear background
             context.fillStyle = '#000';
@@ -271,7 +292,7 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
             context.fillStyle = color;
             const x = width / 2;
             const y = height / 2;
-            parseHTML(context, text.trim(), x, y, width - BASE_FONT_SIZE, LINE_HEIGHT);
+            parseHTML(context, text.trim(), x, y, width - adjustedFontSize, adjustedFontSize * 1.2);
 
             const frame = canvas.toDataURL('image/webp', 0.8);
             const frameCount = duration * 30; // Assuming 30 FPS
@@ -283,28 +304,31 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
             newMarkers.push(totalDuration);
         }
 
-        // console.log('Final line start frames:', newLineStartFrames);
         setFrames(newFrames);
         setMarkers(newMarkers);
         setLineStartFrames(newLineStartFrames);
         setTotalDurationSecs(totalDuration);
         setCurrentIndex(0); // Always start from beginning when frames change
-    }, [lines, width, height, parseHTML, isFontLoaded, BASE_FONT_SIZE, LINE_HEIGHT]);
+    }, [lines, width, height, parseHTML, isFontLoaded, BASE_FONT_SIZE, selectedFont]);
 
-    // Separate effect for handling editing - simplified without isPlaying
+    // Combine index management into a single effect
     useEffect(() => {
-        if (currentEditingLine === null || !lineStartFrames.length) return;
-        
-        // Only update index when editing line changes
-        const targetFrame = lineStartFrames[currentEditingLine];
-        if (targetFrame !== undefined) {
-            setCurrentIndex(targetFrame);
+        // Skip if we don't have necessary data
+        if (!frames.length || !lineStartFrames.length) return;
+
+        // Handle editing line changes
+        if (currentEditingLine !== null) {
+            const targetFrame = lineStartFrames[currentEditingLine];
+            if (targetFrame !== undefined && !isPlaying) {
+                requestAnimationFrame(() => {
+                    setCurrentIndex(targetFrame);
+                });
+            }
+            return;
         }
-    }, [currentEditingLine, lineStartFrames]); // Remove isPlaying from dependencies
 
-    // Keep playback effect separate and simple
-    useEffect(() => {
-        if (isPlaying && frames.length > 0) {
+        // Handle playback
+        if (isPlaying) {
             const id = setInterval(() => {
                 setCurrentIndex(prevIndex => {
                     const nextIndex = prevIndex + 1;
@@ -316,15 +340,15 @@ export default function Preview({ lines, videoSize, currentEditingLine, selected
                 });
             }, 1000 / 30);
             intervalIdRef.current = id;
-        }
 
-        return () => {
-            if (intervalIdRef.current) {
-                clearInterval(intervalIdRef.current);
-                intervalIdRef.current = null;
-            }
-        };
-    }, [isPlaying, frames.length]);
+            return () => {
+                if (intervalIdRef.current) {
+                    clearInterval(intervalIdRef.current);
+                    intervalIdRef.current = null;
+                }
+            };
+        }
+    }, [currentEditingLine, lineStartFrames, isPlaying, frames.length]);
 
     useEffect(() => {
         if (!canvasRef.current || frames.length === 0) return;
