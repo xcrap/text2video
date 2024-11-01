@@ -107,14 +107,14 @@ export default function Home() {
 
 	return (
 		<div className="p-4 flex">
-			<div className="w-1/2 pr-2">
-				<div className="mb-4 flex flex-col p-6 border border-neutral-800 rounded-xl bg-neutral-900 gap-6">
+			<div className="w-1/2 pr-2 flex flex-col gap-4">
+				<div className="flex flex-col p-6 border border-neutral-800 rounded-xl bg-neutral-900 gap-4">
 					<div className="flex items-center">
-						<label htmlFor="videoSize" className="mr-4">
+						<label htmlFor="videoSize" className="mr-4 w-24">
 							Video Size
 						</label>
 						<Select value={videoSize} onValueChange={handleVideoSizeChange}>
-							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-xl">
+							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
 								<SelectValue placeholder="Select video size" />
 							</SelectTrigger>
 							<SelectContent className="border border-neutral-800 bg-neutral-900 rounded-xl">
@@ -140,11 +140,11 @@ export default function Home() {
 						</Select>
 					</div>
 					<div className="flex items-center">
-						<label htmlFor="font" className="mr-4">
-							Font
+						<label htmlFor="font" className="mr-4 w-24">
+							Font Family
 						</label>
 						<Select value={selectedFont} onValueChange={handleFontChange}>
-							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-xl">
+							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
 								<SelectValue placeholder="Select font" />
 							</SelectTrigger>
 							<SelectContent className="border border-neutral-800 rounded-xl bg-neutral-900">
@@ -166,17 +166,19 @@ export default function Home() {
 					onChange={handleTextChange}
 					onClick={handleClick}
 					onKeyUp={handleKeyUp}
-					placeholder="Enter text here..."
+					placeholder="Enter text here, one slide per line"
 					className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-800 text-white focus:outline-none shadow-lg"
 				/>
 				<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
 					<p className="uppercase font-bold mb-2">Properties</p>
 					<ul>
 						<li>
-							Slide Duration <i>--duration (seconds)</i>
+							Slide Duration <i>--duration (seconds)</i>{" "}
+							<span className="ml-2 opacity-30">Default 3 seconds</span>
 						</li>
 						<li>
 							Text Color <i>--color (color or hex color)</i>
+							<span className="ml-2 opacity-30">Default white</span>
 						</li>
 						<li>
 							Text Size: <i>--fontxs, --fontsm, --fontlg, --fontxl</i>
