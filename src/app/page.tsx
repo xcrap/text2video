@@ -192,6 +192,12 @@ export default function Home() {
 									Increases or decreases text size
 								</span>
 							</li>
+							<li>
+								<i>--uppercase</i>
+								<span className="ml-2 opacity-30">
+									Sets all the text to UPPERCASE
+								</span>
+							</li>
 						</ul>
 					</div>
 				</div>

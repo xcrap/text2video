@@ -331,6 +331,8 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 				const durationMatch = optionsStr.match(/duration\s+(\d+)/);
 				const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
 				const textSizeMatch = optionsStr.match(/text(xs|sm|lg|xl)\b/);
+				const textUppercase = optionsStr.match(/uppercase\b/);
+				const shouldUpperCase = Boolean(textUppercase);
 
 				// Get values from matches
 				const duration = durationMatch
@@ -357,7 +359,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 				const y = height / 2;
 				parseHTML(
 					context,
-					text.trim(),
+					shouldUpperCase ? text.trim().toUpperCase() : text.trim(),
 					x,
 					y,
 					width - adjustedFontSize,
@@ -489,7 +491,12 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 		const generateFrame = useCallback(
 			(
 				text: string,
-				options: { duration: number; color: string; textSize: string },
+				options: {
+					duration: number;
+					color: string;
+					textSize: string;
+					shouldUpperCase: boolean;
+				},
 				context: CanvasRenderingContext2D,
 				width: number,
 				height: number,
@@ -531,7 +538,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 
 				parseHTML(
 					context,
-					text.trim(),
+					options.shouldUpperCase ? text.trim().toUpperCase() : text.trim(),
 					x,
 					y,
 					width - adjustedFontSize,
@@ -574,11 +581,14 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(
 					const durationMatch = optionsStr.match(/duration\s+(\d+)/);
 					const colorMatch = optionsStr.match(/color\s+(\w+|#[0-9a-fA-F]{6})/);
 					const textSizeMatch = optionsStr.match(/text(xs|sm|lg|xl)\b/);
+					const textUppercase = optionsStr.match(/uppercase\b/);
+					const shouldUpperCase = Boolean(textUppercase);
 
 					const options = {
 						duration: durationMatch ? Number.parseInt(durationMatch[1], 10) : 3,
 						color: colorMatch ? colorMatch[1] : "#fff",
 						textSize: textSizeMatch ? textSizeMatch[1] : "base",
+						shouldUpperCase: Boolean(textUppercase),
 					};
 
 					const frame = generateFrame(
