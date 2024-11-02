@@ -169,6 +169,7 @@ export default function Home() {
 						onKeyUp={handleKeyUp}
 						placeholder="Enter text here, one slide per line"
 						className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-800 text-white focus:outline-none shadow-lg"
+						spellCheck="false"
 					/>
 					<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
 						<p className="uppercase font-bold mb-2">Properties</p>
