@@ -106,104 +106,108 @@ export default function Home() {
 	};
 
 	return (
-		<div className="p-4 flex">
-			<div className="w-1/2 pr-2 flex flex-col gap-4">
-				<div className="flex flex-col p-6 border border-neutral-800 rounded-xl bg-neutral-900 gap-4">
-					<div className="flex items-center">
-						<label htmlFor="videoSize" className="mr-4 w-24">
-							Video Size
-						</label>
-						<Select value={videoSize} onValueChange={handleVideoSizeChange}>
-							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
-								<SelectValue placeholder="Select video size" />
-							</SelectTrigger>
-							<SelectContent className="border border-neutral-800 bg-neutral-900 rounded-xl">
-								<SelectItem
-									value="1024x1024"
-									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
-								>
-									1:1 (1024x1024)
-								</SelectItem>
-								<SelectItem
-									value="1080x1920"
-									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
-								>
-									Instagram Story (1080x1920)
-								</SelectItem>
-								<SelectItem
-									value="1920x1080"
-									className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
-								>
-									Landscape (1920x1080)
-								</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="flex items-center">
-						<label htmlFor="font" className="mr-4 w-24">
-							Font Family
-						</label>
-						<Select value={selectedFont} onValueChange={handleFontChange}>
-							<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
-								<SelectValue placeholder="Select font" />
-							</SelectTrigger>
-							<SelectContent className="border border-neutral-800 rounded-xl bg-neutral-900">
-								{POPULAR_FONTS.map((font) => (
+		<div className="flex flex-col min-h-screen flex-1">
+			<div className="p-4 flex flex-1">
+				<div className="w-1/2 pr-2 flex flex-col gap-4">
+					<div className="flex flex-col p-6 border border-neutral-800 rounded-xl bg-neutral-900 gap-4">
+						<div className="flex items-center">
+							<label htmlFor="videoSize" className="mr-4 w-24">
+								Video Size
+							</label>
+							<Select value={videoSize} onValueChange={handleVideoSizeChange}>
+								<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
+									<SelectValue placeholder="Select video size" />
+								</SelectTrigger>
+								<SelectContent className="border border-neutral-800 bg-neutral-900 rounded-xl">
 									<SelectItem
-										key={font}
-										value={font}
+										value="1024x1024"
 										className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
 									>
-										{font}
+										1:1 (1024x1024)
 									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+									<SelectItem
+										value="1080x1920"
+										className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+									>
+										Instagram Story (1080x1920)
+									</SelectItem>
+									<SelectItem
+										value="1920x1080"
+										className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+									>
+										Landscape (1920x1080)
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="flex items-center">
+							<label htmlFor="font" className="mr-4 w-24">
+								Font Family
+							</label>
+							<Select value={selectedFont} onValueChange={handleFontChange}>
+								<SelectTrigger className="w-[240px] bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700 focus:ring-1 focus:ring-neutral-600 focus:ring-offset-0 transition-colors rounded-lg">
+									<SelectValue placeholder="Select font" />
+								</SelectTrigger>
+								<SelectContent className="border border-neutral-800 rounded-xl bg-neutral-900">
+									{POPULAR_FONTS.map((font) => (
+										<SelectItem
+											key={font}
+											value={font}
+											className="hover:bg-neutral-800 focus:bg-neutral-800 cursor-pointer"
+										>
+											{font}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+					<textarea
+						value={textInput}
+						onChange={handleTextChange}
+						onClick={handleClick}
+						onKeyUp={handleKeyUp}
+						placeholder="Enter text here, one slide per line"
+						className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-800 text-white focus:outline-none shadow-lg"
+					/>
+					<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
+						<p className="uppercase font-bold mb-2">Properties</p>
+						<ul>
+							<li>
+								<i>--duration (seconds)</i>{" "}
+								<span className="ml-2 opacity-30">
+									Sets the slide duration, default 3 seconds
+								</span>
+							</li>
+							<li>
+								<i>--color (color or hex color)</i>
+								<span className="ml-2 opacity-30">
+									Sets the text color, default white
+								</span>
+							</li>
+							<li>
+								<i>--fontxs, --fontsm, --fontlg, --fontxl</i>
+								<span className="ml-2 opacity-30">
+									Increases or decreases text size
+								</span>
+							</li>
+						</ul>
 					</div>
 				</div>
-				<textarea
-					value={textInput}
-					onChange={handleTextChange}
-					onClick={handleClick}
-					onKeyUp={handleKeyUp}
-					placeholder="Enter text here, one slide per line"
-					className="w-full min-h-72 p-6 border border-neutral-800 rounded-xl bg-neutral-800 text-white focus:outline-none shadow-lg"
-				/>
-				<div className="p-6 border border-neutral-800 rounded-xl bg-neutral-900 text-white">
-					<p className="uppercase font-bold mb-2">Properties</p>
-					<ul>
-						<li>
-							<i>--duration (seconds)</i>{" "}
-							<span className="ml-2 opacity-30">
-								Sets the slide duration, default 3 seconds
-							</span>
-						</li>
-						<li>
-							<i>--color (color or hex color)</i>
-							<span className="ml-2 opacity-30">
-								Sets the text color, default white
-							</span>
-						</li>
-						<li>
-							<i>--fontxs, --fontsm, --fontlg, --fontxl</i>
-							<span className="ml-2 opacity-30">
-								Increases or decreases text size
-							</span>
-						</li>
-					</ul>
+				<div className="w-1/2 pl-2">
+					<Preview
+						ref={previewRef}
+						lines={lines}
+						videoSize={videoSize}
+						currentEditingLine={currentEditingLine}
+						selectedFont={selectedFont}
+						fontClass={loadedFont.className}
+					/>
 				</div>
 			</div>
-			<div className="w-1/2 pl-2">
-				<Preview
-					ref={previewRef}
-					lines={lines}
-					videoSize={videoSize}
-					currentEditingLine={currentEditingLine}
-					selectedFont={selectedFont}
-					fontClass={loadedFont.className}
-				/>
+			<div className="flex items-center justify-end h-16 px-6 border-t border-t-neutral-800 bg-neutral-900">
 				{progress && (
-					<div className="mt-4 space-y-2">
+					<div className="space-y-2 w-full mr-2">
 						<div className="flex justify-between text-sm">
 							<span>{progress.stage}</span>
 							<span>{Math.round(progress.percent)}%</span>
@@ -215,7 +219,7 @@ export default function Home() {
 					variant="outline"
 					onClick={handleGenerate}
 					disabled={isGenerating}
-					className="mt-4 rounded bg-sky-800 hover:bg-sky-900 border border-sky-700 uppercase font-bold outline-none focus:outline-none"
+					className="rounded bg-sky-800 hover:bg-sky-900 border border-sky-700 uppercase font-bold outline-none focus:outline-none"
 				>
 					{isGenerating ? "Generating..." : "Generate Video"}
 				</Button>
